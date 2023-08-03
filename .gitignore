@@ -1,2 +1,7 @@
 .vs/sop/v16/.suo
-bin/Debug/*
+/Import Schema Logs
+.vs/
+obj/
+bin/
+sop.dbmdl
+sop.dbmdl
