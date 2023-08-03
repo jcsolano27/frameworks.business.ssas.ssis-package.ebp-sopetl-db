@@ -13,7 +13,7 @@ env:
   DB_DEV_SERVER: svddev.intel.com,3181
   DB_QA_SERVER: svdqa.intel.com,3181
   PUBLISH_SCRIPT: SvD_Prod.publish.xml
-  PUBLISH_FILE: bin\Debug\SvD.publish.sql
+  PUBLISH_FILE: bin\Debug\sop.publish.sql
 
  
 
@@ -25,15 +25,15 @@ jobs:
     steps:
 #      - uses: actions/checkout@v2
       - name: Checkout
-        run: powershell -command "C:\Scripts\CloneRepo.ps1 -Path 'C:\github.com\intel-innersource\' -Repo ${{ github.repository }} -Cube SvD -Branch ${{ github.ref }}"
+        run: powershell -command "C:\Scripts\CloneRepo.ps1 -Path 'C:\github.com\intel-innersource\' -Repo ${{ github.repository }} -Cube sop -Branch ${{ github.ref }}"
       - name: Build
-        run:  C:\PROGRA~1\MIB055~1\2022\PROFES~1\MSBuild\Current\Bin\msbuild C:\github.com\intel-innersource\SvD\SvD.sqlproj
+        run:  C:\PROGRA~1\MIB055~1\2022\PROFES~1\MSBuild\Current\Bin\msbuild C:\github.com\intel-innersource\sop\sop.sqlproj
       - name: Generate Script
-        run:  C:\PROGRA~1\MIB055~1\2022\PROFES~1\MSBuild\Current\Bin\msbuild C:\github.com\intel-innersource\SvD\SvD.sqlproj /t:Publish /p:SqlPublishProfilePath="${{env.PUBLISH_SCRIPT}}" /p:UpdateDatabase=False
+        run:  C:\PROGRA~1\MIB055~1\2022\PROFES~1\MSBuild\Current\Bin\msbuild C:\github.com\intel-innersource\sop\sop.sqlproj /t:Publish /p:SqlPublishProfilePath="${{env.PUBLISH_SCRIPT}}" /p:UpdateDatabase=False
       - name: Upload Script
         uses: actions/upload-artifact@v2
         with: 
-           path: C:\github.com\intel-innersource\SvD\bin\Debug\SvD.publish.sql 
+           path: C:\github.com\intel-innersource\sop\bin\Debug\sop.publish.sql 
       #- name: Deploy QA
       #  shell: powershell
       #  if: ${{ startsWith(github.ref, 'refs/heads/master') || startsWith(github.ref, 'refs/heads/main')  }} 
