@@ -1,0 +1,28 @@
+﻿CREATE TABLE [dbo].[SnOPSupplyProductHierarchy] (
+    [SnOPSupplyProductId]            INT           NOT NULL,
+    [SnOPSupplyProductCd]            VARCHAR (100) NULL,
+    [SnOPSupplyProductNm]            VARCHAR (100) NULL,
+    [IsActive]                       BIT           CONSTRAINT [DF_SnOPSupplyProductHierarchy_IsActive] DEFAULT ((1)) NOT NULL,
+    [MarketingCodeNm]                VARCHAR (100) NULL,
+    [MarketingCd]                    VARCHAR (100) NULL,
+    [SnOPBrandGroupNm]               VARCHAR (100) NULL,
+    [SnOPComputeArchitectureGroupNm] VARCHAR (100) NULL,
+    [SnOPFunctionalCoreGroupNm]      VARCHAR (100) NULL,
+    [SnOPGraphicsTierCd]             VARCHAR (100) NULL,
+    [SnOPMarketSwimlaneNm]           VARCHAR (100) NULL,
+    [SnOPMarketSwimlaneGroupNm]      VARCHAR (100) NULL,
+    [SnOPPerformanceClassNm]         VARCHAR (100) NULL,
+    [SnOPPackageCd]                  VARCHAR (100) NULL,
+    [SnOPPackageFunctionalTypeNm]    VARCHAR (100) NULL,
+    [SnOPProcessNm]                  VARCHAR (100) NULL,
+    [SnOPProcessNodeNm]              VARCHAR (100) NULL,
+    [ProductGenerationSeriesCd]      VARCHAR (100) NULL,
+    [SnOPProductTypeNm]              VARCHAR (100) NULL,
+    [CreatedOn]                      DATETIME      CONSTRAINT [DF_SupplyProductHierarchy_CreatedOn] DEFAULT (getdate()) NOT NULL,
+    [CreatedBy]                      VARCHAR (25)  CONSTRAINT [DF_SupplyProductHierarchy_CreatedBy] DEFAULT (original_login()) NOT NULL,
+    [SnOPWaferFOCd]                  NVARCHAR (30) NULL,
+    [SnOPBoardFormFactorCd]          NVARCHAR (30) NULL,
+    [PlanningSupplyPackageVariantId] INT           NULL,
+    CONSTRAINT [PK_SupplyProductHierarchy] PRIMARY KEY CLUSTERED ([SnOPSupplyProductId] ASC)
+);
+

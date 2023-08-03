@@ -1,0 +1,25 @@
+﻿CREATE TABLE [sop].[StgSalesBillingAndReturn] (
+    [FiscalCalendarId]        INT              NULL,
+    [ProductNodeId]           NVARCHAR (250)   NULL,
+    [ProfitCenterHierarchyId] NVARCHAR (20)    NULL,
+    [VersionId]               NVARCHAR (20)    NULL,
+    [CustomerNodeId]          NVARCHAR (250)   NULL,
+    [ChannelNodeId]           NVARCHAR (250)   NULL,
+    [SalesRegionNodeId]       NVARCHAR (250)   NULL,
+    [SoldToCustomerId]        NVARCHAR (250)   NULL,
+    [MarketSegmentId]         NVARCHAR (250)   NULL,
+    [PlantCd]                 NVARCHAR (20)    NULL,
+    [ShipToCustomerId]        NVARCHAR (30)    NULL,
+    [EndCustomerId]           NVARCHAR (20)    NULL,
+    [Billing Net Qty]         DECIMAL (38, 10) NULL,
+    [Billing Net Amt]         DECIMAL (38, 10) NULL,
+    [Billing Gross Qty]       DECIMAL (38, 10) NULL,
+    [Billing Gross Amt]       DECIMAL (38, 10) NULL,
+    [Billing Net BOM Qty]     DECIMAL (38, 10) NULL,
+    [Billing Gross BOM Qty]   DECIMAL (38, 10) NULL,
+    [Source]                  NVARCHAR (7)     NULL,
+    [DeleteInd]               NVARCHAR (1)     NULL,
+    [CreatedOn]               DATETIME         DEFAULT (getdate()) NULL,
+    [CreatedBy]               [sysname]        DEFAULT (original_login()) NOT NULL
+);
+

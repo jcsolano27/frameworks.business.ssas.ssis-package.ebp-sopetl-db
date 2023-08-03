@@ -1,0 +1,25 @@
+﻿CREATE TABLE [sop].[SupplyForecast] (
+    [PlanningMonthNbr] INT              DEFAULT ((0)) NOT NULL,
+    [PlanVersionId]    INT              DEFAULT ([sop].[CONST_NotApplicableIdentifier_PlanVersion]()) NOT NULL,
+    [CorridorId]       INT              DEFAULT ([sop].[CONST_CorridorId_NotApplicable]()) NOT NULL,
+    [ProductId]        INT              DEFAULT ([sop].[CONST_NotApplicableIdentifier_Product]()) NOT NULL,
+    [ProfitCenterCd]   INT              DEFAULT ([sop].[CONST_NotApplicableIdentifier_ProfitCenter]()) NOT NULL,
+    [CustomerId]       INT              DEFAULT ([sop].[CONST_NotApplicableIdentifier_Customer]()) NOT NULL,
+    [KeyFigureId]      INT              NOT NULL,
+    [TimePeriodId]     INT              DEFAULT ((0)) NOT NULL,
+    [Quantity]         DECIMAL (38, 10) NULL,
+    [SourceSystemId]   INT              DEFAULT ([sop].[CONST_NotApplicableIdentifier_SourceSystem]()) NOT NULL,
+    [CreatedOnDtm]     DATETIME         DEFAULT (getdate()) NOT NULL,
+    [CreatedByNm]      [sysname]        DEFAULT (original_login()) NOT NULL,
+    [ModifiedOnDtm]    DATETIME         DEFAULT (getdate()) NOT NULL,
+    [ModifiedByNm]     [sysname]        DEFAULT (original_login()) NOT NULL,
+    CONSTRAINT [Pk_SupplyForecast] PRIMARY KEY CLUSTERED ([PlanningMonthNbr] ASC, [PlanVersionId] ASC, [CorridorId] ASC, [ProductId] ASC, [ProfitCenterCd] ASC, [CustomerId] ASC, [KeyFigureId] ASC, [TimePeriodId] ASC, [SourceSystemId] ASC),
+    FOREIGN KEY ([CorridorId]) REFERENCES [sop].[Corridor] ([CorridorId]),
+    FOREIGN KEY ([CustomerId]) REFERENCES [sop].[Customer] ([CustomerId]),
+    FOREIGN KEY ([KeyFigureId]) REFERENCES [sop].[KeyFigure] ([KeyFigureId]),
+    FOREIGN KEY ([ProductId]) REFERENCES [sop].[Product] ([ProductId]),
+    FOREIGN KEY ([ProfitCenterCd]) REFERENCES [sop].[ProfitCenter] ([ProfitCenterCd]),
+    FOREIGN KEY ([SourceSystemId]) REFERENCES [sop].[SourceSystem] ([SourceSystemId]),
+    FOREIGN KEY ([TimePeriodId]) REFERENCES [sop].[TimePeriod] ([TimePeriodId])
+);
+

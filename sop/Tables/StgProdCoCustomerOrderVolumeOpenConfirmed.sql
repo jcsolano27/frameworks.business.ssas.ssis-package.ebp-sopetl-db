@@ -1,0 +1,28 @@
+﻿CREATE TABLE [sop].[StgProdCoCustomerOrderVolumeOpenConfirmed] (
+    [FiscalCalendarId]         INT              NULL,
+    [ProductNodeId]            NVARCHAR (500)   NULL,
+    [ProfitCenterHierarchyId]  NVARCHAR (20)    NULL,
+    [CustomerNodeId]           NVARCHAR (250)   NULL,
+    [ChannelNodeId]            NVARCHAR (250)   NULL,
+    [MarketSegmentId]          NVARCHAR (250)   NULL,
+    [SalesRegionNodeId]        NVARCHAR (250)   NULL,
+    [PlantCd]                  NVARCHAR (20)    NULL,
+    [SoldToCustomerId]         NVARCHAR (10)    NULL,
+    [ShipToCustomerId]         NVARCHAR (10)    NULL,
+    [VersionId]                NVARCHAR (20)    NULL,
+    [EndCustomerId]            NVARCHAR (10)    NULL,
+    [DeleteInd]                NVARCHAR (1)     NULL,
+    [BacklogCgidQty]           DECIMAL (38, 10) NULL,
+    [BacklogRgidDelinquentQty] DECIMAL (38, 10) NULL,
+    [BacklogRgidDelinquentAmt] DECIMAL (38, 10) NULL,
+    [BacklogCddQty]            DECIMAL (38, 10) NULL,
+    [BacklogCgidAmt]           DECIMAL (38, 10) NULL,
+    [LastUpdateSystemDtm]      NVARCHAR (255)   NULL,
+    [SourceSystemId]           INT              DEFAULT ([sop].[CONST_SourceSystemId_SapIbp]()) NULL,
+    [CreatedOnDtm]             DATETIME         DEFAULT (getdate()) NOT NULL,
+    [CreatedByNm]              VARCHAR (255)    DEFAULT (original_login()) NOT NULL,
+    [ModifiedOnDtm]            DATETIME         DEFAULT (getdate()) NOT NULL,
+    [ModifiedByNm]             VARCHAR (255)    DEFAULT (original_login()) NOT NULL,
+    FOREIGN KEY ([SourceSystemId]) REFERENCES [sop].[SourceSystem] ([SourceSystemId])
+);
+

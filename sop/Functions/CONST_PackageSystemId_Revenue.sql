@@ -1,0 +1,13 @@
+﻿CREATE FUNCTION [sop].[CONST_PackageSystemId_Revenue]
+()
+RETURNS INT
+AS
+BEGIN
+    DECLARE @PackageSystemId INT;
+
+    SELECT @PackageSystemId = PackageSystemId
+    FROM [sop].[PackageSystem]
+    WHERE PackageSystemNm = 'REVENUE';
+
+    RETURN @PackageSystemId;
+END;
