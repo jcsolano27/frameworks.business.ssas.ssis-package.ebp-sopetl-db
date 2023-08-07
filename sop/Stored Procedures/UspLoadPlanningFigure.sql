@@ -1,4 +1,11 @@
-﻿
+USE [SVD]
+GO
+/****** Object:  StoredProcedure [sop].[UspLoadPlanningFigure]    Script Date: 8/6/2023 6:27:30 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
   
 ----/*********************************************************************************    
          
@@ -24,6 +31,7 @@
 ----   14 - FG Cost  
 ----   15 - Wafer Cost  
 ----   16 - MfgSupplyForecast - Mfg*
+----   17 - ProdCo Supply /FE* 
 ----   99 - All Storage Tables  
   
 /*  
@@ -43,7 +51,8 @@
 ----    2023-08-01	vitorsix	/* Depending on iCost*/ Removed from KF 9
 ----    2023-08-02	hmanentx	Changing Data Type from "Quantity" column of the temp table used in the Planning Figure process
 ----	2023-08-03	ldesousa	Including the IQM Excess in the @StorageTableSelecion = 99 since the perfomance issue is already solved + Adding MfgSupplyForecast load
-
+----	2023-08-03	ldesousa	Fixed join 
+----	2023-08-04	jcsolano	Addition of ProdCo Supply /FE logic
   
 ----***********************************************************************************/  
   
@@ -64,11 +73,12 @@
 ---- EXEC [sop].[UspLoadPlanningFigure] 14  
 ---- EXEC [sop].[UspLoadPlanningFigure] 15  
 ---- EXEC [sop].[UspLoadPlanningFigure] 16  
+---- EXEC [sop].[UspLoadPlanningFigure] 17
 ----   
 ---- EXEC [sop].[UspLoadPlanningFigure] 99  
 */  
   
-CREATE PROC [sop].[UspLoadPlanningFigure]  
+ALTER PROC [sop].[UspLoadPlanningFigure]  
 @StorageTableSelection INT = 99  
 AS    
     
@@ -200,7 +210,7 @@ BEGIN
  , SUM(Quantity)  
  FROM [sop].[DemandForecast] D  
  JOIN [sop].TimePeriod T ON T.TimePeriodId = D.TimePeriodId AND T.SourceNm = 'Month'  
- JOIN [sop].TimePeriod TQuarterLvl ON T.FiscalYearQuarterNbr = T.FiscalYearQuarterNbr AND TQuarterLvl.SourceNm = 'Quarter' --- Rolling Up all KFs to Quarter Level  
+ JOIN [sop].TimePeriod TQuarterLvl ON TQuarterLvl.FiscalYearQuarterNbr = T.FiscalYearQuarterNbr AND TQuarterLvl.SourceNm = 'Quarter' --- Rolling Up all KFs to Quarter Level  
  GROUP BY   
   PlanningMonthNbr  
  , PlanVersionId  
@@ -229,7 +239,7 @@ BEGIN
  FROM [dbo].[SnOPDemandForecast] D  
  JOIN [sop].Product P ON P.SourceProductId = D.SnOPDemandProductId AND ProductTypeId = @CONST_ProductTypeId_SnopDemandProduct  
  JOIN [sop].TimePeriod T ON T.FiscalYearMonthNbr = D.YearMm AND T.SourceNm = 'Month'  
- JOIN [sop].TimePeriod TQuarterLvl ON T.FiscalYearQuarterNbr = T.FiscalYearQuarterNbr AND TQuarterLvl.SourceNm = 'Quarter' --- Rolling Up all KFs to Quarter Level  
+ JOIN [sop].TimePeriod TQuarterLvl ON TQuarterLvl.FiscalYearQuarterNbr = T.FiscalYearQuarterNbr AND TQuarterLvl.SourceNm = 'Quarter' --- Rolling Up all KFs to Quarter Level  
  WHERE ParameterId <> @CONST_ParameterId_ConsensusDemandDraft ---- (There is no Draft Scenario!!!)  
  GROUP BY   SnOPDemandForecastMonth  
  , CASE WHEN ParameterId = @CONST_ParameterId_ConsensusDemand THEN @CONST_PlanVersionId_Base  
@@ -305,11 +315,21 @@ BEGIN
  , ProfitCenterCd  
  , CustomerId  
  , KeyFigureId  
- , TimePeriodId  
- , Quantity  
- FROM [sop].ActualSales  
+ , TQuarterLvl.TimePeriodId  
+ , SUM(Quantity) Quantity
+ FROM [sop].ActualSales A
+	JOIN [sop].TimePeriod T ON T.TimePeriodId = A.TimePeriodId   
+	JOIN [sop].TimePeriod TQuarterLvl ON TQuarterLvl.FiscalYearQuarterNbr = T.FiscalYearQuarterNbr AND TQuarterLvl.SourceNm = 'Quarter' --- Rolling Up all KFs to Quarter Level  
+ GROUP BY 
+   PlanVersionId   
+ , ProductId  
+ , ProfitCenterCd  
+ , CustomerId  
+ , KeyFigureId 
+ , TQuarterLvl.TimePeriodId  
+
+ 
 END;  
-  
   
 ------------------------------------------------------------------------------------------------    
 --  Supply Forecast  
@@ -484,7 +504,7 @@ BEGIN
   , SUM([Quantity]) as Quantity  
   FROM [SVD].[dbo].[SnOPDemandForecast] D  
    JOIN sop.TimePeriod T ON T.FiscalYearMonthNbr = D.YearMm AND T.SourceNm = 'Month'  
-   JOIN [sop].TimePeriod TQuarterLvl ON T.FiscalYearQuarterNbr = T.FiscalYearQuarterNbr AND TQuarterLvl.SourceNm = 'Quarter' --- Rolling Up to Quarter Level  
+   JOIN [sop].TimePeriod TQuarterLvl ON TQuarterLvl.FiscalYearQuarterNbr = T.FiscalYearQuarterNbr AND TQuarterLvl.SourceNm = 'Quarter' --- Rolling Up to Quarter Level  
    JOIN sop.Product P ON P.SourceProductId = CAST(D.SnOPDemandProductId AS VARCHAR(30)) AND P.ProductTypeId = /*2*/ @CONST_ProductTypeId_SnopDemandProduct  
   WHERE ParameterId = /*1*/ @CONST_ParameterId_ConsensusDemand  
   GROUP BY  
@@ -835,7 +855,50 @@ BEGIN
  FROM sop.MfgSupplyForecast
 END
 
+
 ------------------------------------------------------------------------------------------------    
+-- ProdCo Request Volume/FE/Full - 
+------------------------------------------------------------------------------------------------  
+ 
+IF @StorageTableSelection in (17,99)    
+BEGIN  
+ INSERT INTO #PlanningFigure (PlanningMonthNbr,PlanVersionId,CorridorId,ProductId,ProfitCenterCd,CustomerId,KeyFigureId,TimePeriodId,Quantity)   
+ SELECT
+   PlanningMonthNbr
+ , PlanVersionId
+ ,  @CONST_CorridorId_NotApplicable CorridorId 
+ , ProductId
+ , ProfitCenterCd
+ , @CONST_CustomerId_NotApplicable CustomerId
+ , KeyFigureId
+ , TimePeriodId
+ , Quantity
+ FROM [sop].[SPOR]
+ WHERE KeyFigureId = @CONST_KeyFigureId_ProdCoRequestVolumeFeFull
+END
+
+----  ProdCo Request Cost/FE/Full (ProdCo Request Volume/FE/Full * Wafer Price)
+INSERT INTO #PlanningFigure (PlanningMonthNbr,PlanVersionId,CorridorId,ProductId,ProfitCenterCd,CustomerId,KeyFigureId,TimePeriodId,Quantity)   
+ SELECT  
+   PF.PlanningMonthNbr  
+ , PlanVersionId  
+ , CorridorId  
+ , PF.ProductId  
+ , PF.ProfitCenterCd  
+ , CustomerId  
+ , @CONST_KeyFigureId_ProdCoRequestCostFeFull
+ , PF.TimePeriodId  
+ , PF.Quantity * P.KeyFigureValue AS Quantity -- ProdCo Request Volume/FE/Full * Wafer Price 
+ FROM #PlanningFigure PF  
+ JOIN [sop].CostPrice P ON   
+       PF.PlanningMonthNbr  = P.PlanningMonth AND
+       P.ProductId   = PF.ProductId  
+       AND P.TimePeriodId  = PF.TimePeriodId  
+ WHERE PF.KeyFigureId =  @CONST_KeyFigureId_ProdCoRequestVolumeFeFull
+ AND P.KeyFigureId = @CONST_KeyFigureId_WaferPrice
+;
+
+---------------------------------------------------------------------------------------    
 --  MERGE Into PlanningFigure    
 ------------------------------------------------------------------------------------------------   
 ; WITH KFs AS  
